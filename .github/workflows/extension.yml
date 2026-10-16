@@ -1,0 +1,42 @@
+name: Browser extension
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 7 * * 1" # weekly: rebuild with the latest EasyList and re-test
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Rebuild rules from the latest filter lists
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: npm run build
+
+      - name: Converter and rule file tests
+        run: npm test
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Load the extension in Chromium and test it
+        run: npm run test:browser
+
+      # Download from the run's Summary page, unzip, and "Load unpacked".
+      - uses: actions/upload-artifact@v4
+        with:
+          name: adblocknes-extension
+          path: extension/

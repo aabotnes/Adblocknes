@@ -1,0 +1,5 @@
+node_modules/
+.cache/
+adblocknes-extension.zip
+# Chrome writes this when the folder is loaded unpacked
+extension/_metadata/

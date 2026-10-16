@@ -1,0 +1,11 @@
+:root { color-scheme: light dark; --accent: #c62828; }
+body { font: 13px/1.4 system-ui, sans-serif; margin: 0; padding: 12px 14px; width: 260px; }
+header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+h1 { font-size: 15px; margin: 0; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 0; border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent); cursor: pointer; }
+.row span { display: flex; flex-direction: column; min-width: 0; }
+.row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+small { opacity: 0.7; }
+input[type="checkbox"] { accent-color: var(--accent); width: 18px; height: 18px; flex: none; }
+.hint { margin: 6px 0 0; font-size: 11px; opacity: 0.6; }

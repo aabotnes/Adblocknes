@@ -1,0 +1,16 @@
+{
+  "name": "adblocknes-extension",
+  "private": true,
+  "type": "module",
+  "description": "Builds and tests the Adblocknes browser extension in extension/",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/abp.test.mjs",
+    "test:browser": "node --test test/extension.test.mjs",
+    "zip": "cd extension && zip -qr ../adblocknes-extension.zip . -x '.*'"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  },
+  "engines": { "node": ">=20" }
+}

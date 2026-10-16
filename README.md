@@ -38,7 +38,7 @@ DNS blocking works by refusing to look up the address of known ad and tracking s
 | Ads inside most free mobile apps and games | Yes, mostly |
 | Smart TV, Roku, Fire TV and console telemetry and home-screen ads | Largely |
 | Malware, phishing and scam sites | Yes (threat list) |
-| **YouTube ads in videos** | **No** (see below) |
+| **YouTube ads in videos** | **No** (see below, and the [browser extension](#browser-extension-for-what-dns-cant-block)) |
 | Sponsored posts on Facebook, Instagram, X, TikTok | No, they come from the same servers as normal posts |
 | Ads in Twitch, Spotify, Hulu and similar streams | Mostly no, same reason |
 
@@ -48,12 +48,16 @@ YouTube serves its ads from the same servers (`googlevideo.com`, `youtube.com`) 
 
 What does work, per device:
 
-- **Computers:** the browser extension [uBlock Origin](https://ublockorigin.com/) (Firefox has the full version; on Chrome use uBlock Origin Lite) blocks YouTube ads reliably. Brave browser also blocks them built-in.
+- **Computers:** the [Adblocknes browser extension](#browser-extension-for-what-dns-cant-block) in this repo, or [uBlock Origin](https://ublockorigin.com/) (Firefox has the full version; on Chrome use uBlock Origin Lite) blocks YouTube ads reliably. Brave browser also blocks them built-in.
 - **Android phones:** watch YouTube in Firefox with uBlock Origin, or in Brave. Alternative YouTube apps such as NewPipe also show no ads.
 - **Android TV / Google TV / Fire TV:** [SmartTube](https://github.com/yuliskov/SmartTube) is an ad-free YouTube app for TVs.
 - **iPhone / iPad / Apple TV, and anything else:** YouTube Premium is the only reliable option.
 
 The network-wide blocker and a browser extension complement each other: the blocker covers every device and app, the extension handles what DNS can't.
+
+## Browser extension for what DNS can't block
+
+The [`extension/`](extension) folder is a Chrome, Edge and Brave extension that removes YouTube video ads, hides leftover ad boxes, and blocks ads served from a site's own domain, using EasyList, EasyPrivacy and Adblocknes's own YouTube filters. Install it with *Load unpacked*; the steps are in **[docs/browser-extension.md](docs/browser-extension.md)**.
 
 ## Day-to-day
 
@@ -68,6 +72,8 @@ Blocklists update themselves every 24 hours.
 
 - [`docker-compose.yml`](docker-compose.yml): the whole stack. A small one-shot `setup` container writes the initial AdGuard Home configuration, then AdGuard Home runs on host networking so it answers DNS on port 53 and sees each device's real IP.
 - [`docs/synology.md`](docs/synology.md): full Synology guide.
+- [`extension/`](extension): the browser extension, ready to load unpacked. [`filters/`](filters) holds its own filters, [`scripts/build.mjs`](scripts/build.mjs) regenerates its rules from the filter lists (`npm run build`).
+- `.github/workflows/extension.yml`: tests the extension in Chromium and publishes it as a download; rebuilds it with fresh lists every Monday.
 - `.github/workflows/test.yml`: starts the stack, checks every blocklist downloads, and checks that ad domains are blocked while normal domains resolve. It also runs weekly, so a dead blocklist URL is caught.
 
 Once AdGuard Home is running, all settings are managed in its web interface. The `setup` container never overwrites an existing configuration.

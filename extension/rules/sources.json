@@ -1,0 +1,31 @@
+{
+  "built": "2026-10-16T19:33:34.085Z",
+  "lists": [
+    {
+      "id": "easylist",
+      "name": "EasyList",
+      "url": "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/thirdparties/easylist/easylist.txt",
+      "filters": 55040,
+      "cosmeticFilters": 24349,
+      "dnrRules": 3755,
+      "skipped": 3343
+    },
+    {
+      "id": "easyprivacy",
+      "name": "EasyPrivacy",
+      "url": "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/thirdparties/easylist/easyprivacy.txt",
+      "filters": 56242,
+      "cosmeticFilters": 2,
+      "dnrRules": 9092,
+      "skipped": 76
+    },
+    {
+      "id": "adblocknes",
+      "name": "Adblocknes filters",
+      "filters": 8,
+      "cosmeticFilters": 27,
+      "dnrRules": 8,
+      "skipped": 0
+    }
+  ]
+}
