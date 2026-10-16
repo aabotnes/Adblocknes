@@ -18,12 +18,13 @@ services:
       ADMIN_PASSWORD: change-me # <-- CHANGE THIS before the first start
       WEB_PORT: "8080" # web interface port: http://<nas-ip>:8080
     volumes:
-      - ./conf:/conf
+      - ./:/data # the project folder; conf/ and work/ are created inside it
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         set -eu
-        CONF=/conf/AdGuardHome.yaml
+        mkdir -p /data/conf /data/work
+        CONF=/data/conf/AdGuardHome.yaml
         if [ -f "$$CONF" ]; then
           echo "Configuration already exists, leaving it untouched."
           exit 0
@@ -127,6 +128,9 @@ services:
     network_mode: host
     environment:
       TZ: Europe/Oslo # your time zone, used for statistics
+    # The project folder is mounted as a whole (instead of ./conf and ./work)
+    # because Container Manager refuses to start when a mounted folder does
+    # not exist yet. Settings end up in conf/, data and logs in work/.
     volumes:
-      - ./conf:/opt/adguardhome/conf
-      - ./work:/opt/adguardhome/work
+      - ./:/data
+    command: ["--no-check-update", "-c", "/data/conf/AdGuardHome.yaml", "-w", "/data/work"]

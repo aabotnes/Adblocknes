@@ -28,6 +28,8 @@ This works on DSM 7.2 or later with **Container Manager** (Package Center → Co
 
 If the project fails to start, open *Container → adblocknes-setup → Log*. The message tells you what to fix (usually the password), then select the project and click **Build** again.
 
+If Container Manager says a mount failed because `conf` does not exist, you have an older copy of `docker-compose.yml`. Either paste in the current one, or create the folders `conf` and `work` inside `docker/adblocknes` in File Station, then click **Build** again.
+
 ## Point your network at it
 
 In your router's admin page, find the **DHCP** or **LAN** settings and set the **DNS server** (sometimes "primary DNS") to your NAS's IP address.
