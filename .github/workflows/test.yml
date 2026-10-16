@@ -15,7 +15,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set a test password
-        run: sed -i 's/ADMIN_PASSWORD: change-me /ADMIN_PASSWORD: ci-test-password /' docker-compose.yml
+        run: |
+          sed -i 's/ADMIN_PASSWORD: change-me /ADMIN_PASSWORD: ci-test-password /' docker-compose.yml
+          grep -q 'ADMIN_PASSWORD: ci-test-password' docker-compose.yml
 
       - name: Pull images
         run: docker compose pull
