@@ -1,0 +1,8 @@
+! Your own filters. Same syntax as EasyList / uBlock Origin, one per line.
+! After editing, run `npm run build` and reload the extension.
+!
+! Examples (remove the leading "!" to use them):
+! ||ads.example.com^                 block a whole ad server
+! ||example.com/banners/             block a path on one site
+! example.com##.sponsored-box        hide an element on one site
+! @@||example.com^$document          switch blocking off on a site

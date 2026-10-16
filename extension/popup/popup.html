@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="../icons/32.png" alt="" width="20" height="20">
+    <h1>Adblocknes</h1>
+  </header>
+
+  <label class="row">
+    <span>
+      <strong>Blocking</strong>
+      <small id="enabled-note">On for all sites</small>
+    </span>
+    <input type="checkbox" id="enabled" role="switch">
+  </label>
+
+  <label class="row" id="site-row" hidden>
+    <span>
+      <strong id="site-host"></strong>
+      <small id="site-note"></small>
+    </span>
+    <input type="checkbox" id="site" role="switch">
+  </label>
+
+  <p class="hint">The number on the icon counts blocked requests on this tab.</p>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Adblocknes",
+  "version": "1.0.0",
+  "description": "Blocks the ads a DNS blocker can't: YouTube video ads, ad boxes on pages, and ads served from a site's own domain.",
+  "minimum_chrome_version": "120",
+  "permissions": ["declarativeNetRequest", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Adblocknes",
+    "default_popup": "popup/popup.html",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png" }
+  },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "declarative_net_request": {
+    "rule_resources": [
+      { "id": "easylist", "enabled": true, "path": "rules/easylist.json" },
+      { "id": "easyprivacy", "enabled": true, "path": "rules/easyprivacy.json" },
+      { "id": "adblocknes", "enabled": true, "path": "rules/adblocknes.json" }
+    ]
+  }
+}
