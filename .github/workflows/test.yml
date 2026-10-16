@@ -1,0 +1,62 @@
+name: Test stack
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # weekly: catches dead blocklist URLs
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set a test password
+        run: |
+          sed -i 's/ADMIN_PASSWORD: change-me /ADMIN_PASSWORD: ci-test-password /' docker-compose.yml
+          grep -q 'ADMIN_PASSWORD: ci-test-password' docker-compose.yml
+
+      - name: Pull images
+        run: docker compose pull
+
+      - name: Free port 53
+        run: |
+          sudo systemctl stop systemd-resolved
+          sudo rm -f /etc/resolv.conf
+          echo "nameserver 1.1.1.1" | sudo tee /etc/resolv.conf
+
+      - name: Start stack
+        run: docker compose up -d
+
+      - name: Wait for every enabled blocklist to download
+        run: |
+          curl -fsS -c ck -X POST localhost:8080/control/login \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"admin","password":"ci-test-password"}'
+          for i in $(seq 1 60); do
+            status=$(curl -fsS -b ck localhost:8080/control/filtering/status)
+            missing=$(echo "$status" | jq -r '.filters[] | select(.enabled and .rules_count == 0) | .name')
+            if [ -z "$missing" ]; then
+              echo "$status" | jq -r '.filters[] | select(.enabled) | "\(.rules_count)\t\(.name)"'
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Blocklists that never loaded:"; echo "$missing"
+          docker logs adblocknes
+          exit 1
+
+      - name: Ad domains are blocked, normal domains resolve
+        run: |
+          set -x
+          [ "$(dig +short @127.0.0.1 doubleclick.net A)" = "0.0.0.0" ]
+          [ "$(dig +short @127.0.0.1 googleadservices.com A)" = "0.0.0.0" ]
+          dig +short @127.0.0.1 example.com A | grep -Eq '^[0-9.]+$'
+          [ "$(dig +short @127.0.0.1 example.com A)" != "0.0.0.0" ]
+
+      - name: Logs
+        if: always()
+        run: docker compose logs

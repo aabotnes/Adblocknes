@@ -1,0 +1,132 @@
+# Adblocknes: network-wide ad blocking for your home network (AdGuard Home).
+#
+# On a Synology NAS: Container Manager > Project > Create, then paste this file.
+# The only thing you MUST change is ADMIN_PASSWORD below.
+# Full guide: docs/synology.md
+
+services:
+  # Runs once on the first start. It writes a ready-made AdGuard Home
+  # configuration (login, blocklists, encrypted upstream DNS) so there is no
+  # setup wizard. If a configuration already exists it does nothing, so your
+  # changes in the web interface are never overwritten.
+  setup:
+    image: httpd:2.4-alpine # only used for its bcrypt password tool
+    container_name: adblocknes-setup
+    restart: "no"
+    environment:
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: change-me # <-- CHANGE THIS before the first start
+      WEB_PORT: "8080" # web interface port: http://<nas-ip>:8080
+    volumes:
+      - ./conf:/conf
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        CONF=/conf/AdGuardHome.yaml
+        if [ -f "$$CONF" ]; then
+          echo "Configuration already exists, leaving it untouched."
+          exit 0
+        fi
+        if [ "$$ADMIN_PASSWORD" = "change-me" ] || [ $${#ADMIN_PASSWORD} -lt 8 ]; then
+          echo "ERROR: set ADMIN_PASSWORD in docker-compose.yml (at least 8 characters, not change-me)." >&2
+          exit 1
+        fi
+        case "$$ADMIN_USER" in
+          ""|*[!A-Za-z0-9._-]*) echo "ERROR: ADMIN_USER may only contain letters, digits, . _ and -" >&2; exit 1 ;;
+        esac
+        case "$$WEB_PORT" in
+          ""|*[!0-9]*) echo "ERROR: WEB_PORT must be a number" >&2; exit 1 ;;
+        esac
+        HASH=$$(htpasswd -nbBC 10 "" "$$ADMIN_PASSWORD" | tr -d ':\n' | sed 's/^\$$2y/$$2a/')
+        cat > "$$CONF.tmp" <<CONFIG
+        http:
+          address: 0.0.0.0:$$WEB_PORT
+          session_ttl: 720h
+        users:
+          - name: $$ADMIN_USER
+            password: $$HASH
+        theme: auto
+        dns:
+          bind_hosts:
+            - 0.0.0.0
+          port: 53
+          upstream_dns:
+            - https://dns.quad9.net/dns-query
+            - https://cloudflare-dns.com/dns-query
+          bootstrap_dns:
+            - 9.9.9.9
+            - 149.112.112.112
+            - 1.1.1.1
+            - 1.0.0.1
+          fallback_dns:
+            - 9.9.9.9
+            - 1.1.1.1
+          upstream_mode: parallel
+          cache_enabled: true
+          cache_size: 4194304
+          cache_optimistic: true
+          enable_dnssec: true
+          ratelimit: 0
+          use_private_ptr_resolvers: true
+        querylog:
+          enabled: true
+          interval: 168h
+        statistics:
+          enabled: true
+          interval: 720h
+        filters:
+          - enabled: true
+            url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+            name: AdGuard DNS filter
+            id: 1
+          - enabled: true
+            url: https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/pro.txt
+            name: HaGeZi Multi PRO (ads, tracking, telemetry)
+            id: 2
+          - enabled: true
+            url: https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/tif.medium.txt
+            name: HaGeZi Threat Intelligence (malware, phishing, scams)
+            id: 3
+          - enabled: false
+            url: https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/pro.plus.txt
+            name: "Optional: HaGeZi Multi PRO++ (stricter, may break some sites)"
+            id: 4
+          - enabled: false
+            url: https://big.oisd.nl/
+            name: "Optional: OISD Big"
+            id: 5
+        whitelist_filters: []
+        user_rules:
+          - "! Your own rules. Examples:"
+          - "!   @@||example.com^      allow a site that is blocked by mistake"
+          - "!   ||ads.example.com^    block an extra domain"
+          - "! Tells Firefox not to switch to its own DNS-over-HTTPS, which would bypass this blocker."
+          - "||use-application-dns.net^"
+        filtering:
+          protection_enabled: true
+          filtering_enabled: true
+          filters_update_interval: 24
+          blocking_mode: default
+        dhcp:
+          enabled: false
+        schema_version: 34
+        CONFIG
+        mv "$$CONF.tmp" "$$CONF"
+        echo "Created $$CONF for user '$$ADMIN_USER'. Web interface on port $$WEB_PORT."
+
+  adguardhome:
+    image: adguard/adguardhome:v0.107.79
+    container_name: adblocknes
+    restart: unless-stopped
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    # Host networking: the NAS itself answers DNS on port 53 and AdGuard Home
+    # sees each device's real IP address (needed for per-device statistics).
+    network_mode: host
+    environment:
+      TZ: Europe/Oslo # your time zone, used for statistics
+    volumes:
+      - ./conf:/opt/adguardhome/conf
+      - ./work:/opt/adguardhome/work
